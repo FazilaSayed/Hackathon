@@ -92,9 +92,16 @@ def main_page(username):
             save_data()
             st.sidebar.success(f"Entry for {delete_str} deleted successfully!")
 
+    # Date Range Selection
+    st.sidebar.subheader("📅 Select Date Range")
+    start_date = st.sidebar.date_input("Start Date", min_value=datetime(2020, 1, 1), value=datetime.today() - timedelta(days=7))
+    end_date = st.sidebar.date_input("End Date", min_value=start_date, value=datetime.today())
+
     # Add button for generating summary in the sidebar
-    if st.sidebar.button("📊 Generate Weekly Summary"):
+    if st.sidebar.button("📊 Generate Summary"):
         st.session_state.generate_summary = True
+        st.session_state.start_date = start_date
+        st.session_state.end_date = end_date
 
     # Main Page content
 
@@ -187,97 +194,168 @@ def main_page(username):
                     f"woke at **{selected_entry['wake_time']}** which covers **{selected_entry['duration']} hrs** of sleep!"
                 )
 
-            # Generate Weekly Summary
+            # Generate Summary based on selected date range
             if st.session_state.get("generate_summary", False):
-                st.subheader("📈 Sleep Duration (Last 7 Days)")
-                entries_sorted = sorted(entries[-7:], key=lambda x: x['date'])
-                dates = [e["date"] for e in entries_sorted]
-                durations = [e["duration"] for e in entries_sorted]
-
-                # Recommended sleep ranges by age
-                if meta["age"] <= 5:
-                    min_sleep, max_sleep = 10, 13
-                elif meta["age"] <= 13:
-                    min_sleep, max_sleep = 9, 11
-                elif meta["age"] <= 18:
-                    min_sleep, max_sleep = 8, 10
-                elif meta["age"] <= 64:
-                    min_sleep, max_sleep = 7, 9
-                else:
-                    min_sleep, max_sleep = 7, 8
-
-                # Determine bar colors based on duration
-                bar_colors = []
-                for d in durations:
-                    if d < min_sleep:
-                        bar_colors.append('grey')
-                    elif d <= max_sleep:
-                        bar_colors.append('forestgreen')
-                    else:
-                        bar_colors.append('darkgreen')
-
-                fig, ax = plt.subplots()
-                ax.bar(dates, durations, color=bar_colors)
-                ax.axhspan(min_sleep, max_sleep, facecolor='lightgreen', alpha=0.3, label=f"Ideal: {min_sleep}-{max_sleep} hrs")
-
-                # Add legend outside the plot
-                legend_patches = [
-                    Patch(facecolor='grey', label='Below Ideal'),
-                    Patch(facecolor='forestgreen', label='Within Ideal'),
-                    Patch(facecolor='darkgreen', label='Above Ideal'),
-                    Patch(facecolor='lightgreen', alpha=0.3, label=f'Ideal Range {min_sleep}-{max_sleep} hrs')
+                st.subheader("📈 Sleep Duration based on Custom Date Range")
+                entries_in_range = [
+                    e for e in entries if start_date <= datetime.strptime(e["date"], "%Y-%m-%d").date() <= end_date
                 ]
-                ax.legend(handles=legend_patches, bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0)
+                if not entries_in_range:
+                    st.warning(f"No sleep data available between {start_date} and {end_date}.")
+                else:
+                    entries_sorted = sorted(entries_in_range, key=lambda x: x['date'])
+                    dates = [e["date"] for e in entries_sorted]
+                    durations = [e["duration"] for e in entries_sorted]
 
-                plt.xticks(rotation=30)
-                ax.set_ylabel("Hours Slept")
-                ax.set_title("Last 7 Days Sleep Duration")
-                plt.tight_layout()
-                st.pyplot(fig, use_container_width=True)
+                    # Calculate average sleep duration
+                    avg_sleep = round(sum(durations) / len(durations), 2)
 
-                total_sleep_week = sum(durations)
-                required_sleep_week = get_required_sleep(meta["age"], meta["gender"]) * 7
-                st.subheader("📝 Custom Sleep Summary")
-                summary = f"""
-                🌟 Hey {username}! Here's your sleep snapshot for this week:
-
-                - You slept **{total_sleep_week:.1f} hrs** this week.
-                - Recommended sleep for a {meta['age']} year old ({meta['gender']}) is **{required_sleep_week} hrs** based on your profile.
-                - { "✅ Great! You're on track!" if total_sleep_week >= required_sleep_week else "🛌 Let's aim to improve your weekly sleep total!" }
-
-                ✨ Tips:
-                - Try to keep a consistent bedtime each night.
-                - Aim for 7-9 hours each night for best recovery.
-
-                Keep tracking and you’ll be a sleep ninja soon!
-                """
-                st.markdown(summary)
-
-                streak = 0
-                today = datetime.today().date()
-                for i in range(1, 8):
-                    day = (today - timedelta(days=i)).strftime("%Y-%m-%d")
-                    if any(e["date"] == day for e in entries):
-                        streak += 1
+                    # Recommended sleep ranges by age
+                    if meta["age"] <= 5:
+                        min_sleep, max_sleep = 10, 13
+                    elif meta["age"] <= 13:
+                        min_sleep, max_sleep = 9, 11
+                    elif meta["age"] <= 18:
+                        min_sleep, max_sleep = 8, 10
+                    elif meta["age"] <= 64:
+                        min_sleep, max_sleep = 7, 9
                     else:
-                        break
-                st.subheader("🔥 Sleep Streak")
-                st.markdown(f"**{streak} day streak** of sleep tracking! Keep it up! 🚀")
+                        min_sleep, max_sleep = 7, 8
+
+                    # Determine bar colors based on duration
+                    bar_colors = []
+                    for d in durations:
+                        if d < min_sleep:
+                            bar_colors.append('grey')
+                        elif d <= max_sleep:
+                            bar_colors.append('teal')
+                        else:
+                            bar_colors.append('darkgreen')
+
+                    # Plot bar or line graph based on the number of entries
+                    if len(durations) <= 7:
+                        fig, ax = plt.subplots()
+                        ax.bar(dates, durations, color=bar_colors)
+                        ax.axhspan(min_sleep, max_sleep, facecolor='lightgreen', alpha=0.3, label=f"Ideal: {min_sleep}-{max_sleep} hrs")
+
+                        # Add legend outside the plot
+                        legend_patches = [
+                            Patch(facecolor='grey', label='Below Ideal'),
+                            Patch(facecolor='teal', label='Within Ideal'),
+                            Patch(facecolor='darkgreen', label='Above Ideal'),
+                            Patch(facecolor='lightgreen', alpha=0.3, label=f'Ideal Range {min_sleep}-{max_sleep} hrs')
+                        ]
+                        ax.legend(handles=legend_patches, bbox_to_anchor=(1.02, 1), loc='upper left')
+
+                        ax.set_xlabel('Dates')
+                        ax.set_ylabel('Duration (hrs)')
+                        ax.set_title('Sleep Duration Over Selected Range')
+                        st.pyplot(fig)
+                    else:
+                        import matplotlib.dates as mdates
+                        import numpy as np
+
+                        fig, ax = plt.subplots(figsize=(10, 5))
+
+                        x = [datetime.strptime(d, "%Y-%m-%d") for d in dates]
+                        y = durations
+
+                        ax.plot(x, y, color='mediumslateblue', marker='o', linewidth=2, label="Sleep Duration")
+                        ax.fill_between(x, y, min_sleep, where=[val >= min_sleep for val in y], color='lavender', alpha=0.3)
+                        ax.axhline(y=min_sleep, color='orangered', linestyle='--', linewidth=1.5, label=f"Min Recommended ({min_sleep} hrs)")
+                        ax.axhline(y=max_sleep, color='seagreen', linestyle='--', linewidth=1.5, label=f"Max Recommended ({max_sleep} hrs)")
+                        ax.fill_between(x, min_sleep, max_sleep, color='palegreen', alpha=0.2, label='Ideal Range')
+
+                        for i, txt in enumerate(y):
+                            ax.annotate(f"{txt:.1f}", (x[i], y[i]), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=8, color='black')
+
+                        ax.set_title(f"🌙 Sleep Trend from {start_date.strftime('%b %d')} to {end_date.strftime('%b %d')}", fontsize=14, fontweight='bold')
+                        ax.set_ylabel("Sleep Duration (hrs)", fontsize=12)
+                        ax.set_xlabel("Date", fontsize=12)
+                        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
+                        ax.xaxis.set_major_locator(mdates.DayLocator())
+                        fig.autofmt_xdate()
+
+                        ax.legend(loc="upper left", frameon=True)
+                        st.pyplot(fig)
+
+  # Additional sleep summary
+                    # Calculate the number of days in the selected range
+                    days_in_range = (end_date - start_date).days + 1  # Including both start and end dates
+                    #Calculate the required sleep for the total days in the range
+                    required_sleep_week = get_required_sleep(meta["age"], meta["gender"]) * days_in_range
+
+                    total_sleep_week = sum(durations)
+
+                    # Calculate longest streak
+                    streak = 0
+                    longest_streak = 0
+                    streak_start_date = None
+                    streak_end_date = None
+                    for idx, duration in enumerate(durations):
+                        if duration >= min_sleep:
+                            if streak == 0:
+                                streak_start_date = dates[idx]
+                            streak += 1
+                            if streak > longest_streak:
+                                longest_streak = streak
+                                streak_end_date = dates[idx]
+                        else:
+                            streak = 0
+
+                    # Custom Sleep Summary
+                    summary = f"""
+                    🌟 Hey {username}! Here's your sleep snapshot for this week:
+
+                    - Your average sleep during this period is **{avg_sleep} hrs**.
+                    - Recommended sleep for a {meta['age']} year old ({meta['gender']}) is **{min_sleep}-{max_sleep} hrs**.
+                    - Your longest streak of meeting the sleep goal is **{longest_streak} days**, between {streak_start_date} and {streak_end_date}.
+                    - Recommended total sleep for this period: **{required_sleep_week} hrs**.
+
+                    - You slept **{total_sleep_week} hrs** this week.
+                    - { "✅ Great! You're on track!" if total_sleep_week >= required_sleep_week else "🛌 Let's aim to improve your weekly sleep total!" }
+
+                    ✨ Tips:
+                    - Try to keep a consistent bedtime each night.
+                    - Aim for 7-9 hours each night for best recovery.
+
+                    Keep tracking and you’ll be a sleep ninja soon!
+                    """
+                    st.markdown(summary)
+
+                st.session_state.generate_summary = False
+
 
 # ------------------------
 # Main Page Logic
 # ------------------------
 
-username = st.text_input("Enter your name to continue:", key="username_input").strip()
-st.session_state["username"] = username
+if "username" not in st.session_state:
+    # App description
+    st.markdown("""
+    ## 🌙 Welcome to **Sleep Tracker**   
+    Track your sleep, build streaks, and get personalized feedback to become a **Sleep Superstar**!  
+    Just log your bedtime & wake time – we’ll take care of the rest 💤✨
+    """)
+    st.markdown("#### 👋 Let's get started!")
+    st.markdown("Type your name to log in or create a profile. This helps us personalize your sleep journey. 😴")
+    username = st.text_input("Enter your name to continue:", key="username_input").strip()
 
-if username:
+    if username:
+        st.session_state["username"] = username
+        st.rerun()
+
+# Once username is in session state, continue as normal
+if "username" in st.session_state:
+    username = st.session_state["username"]
+    
     if username in sleep_data:
         main_page(username)
     else:
-        st.subheader("New user detected! Please complete your profile:")
+        st.subheader("🆕 New user detected! Let’s create your profile 👇")
+        st.markdown("We use this info to give you **accurate sleep recommendations** based on your age & gender.")        
         with st.form("new_user_form", clear_on_submit=False):
-            gender = st.selectbox("Select your gender:", ["Male", "Female", "Other"])
+            gender = st.selectbox("Select your gender:", ["Male", "Female"])
             age = st.number_input("Enter your age:", min_value=1, max_value=100, step=1)
             submit = st.form_submit_button("Save Profile")
         
@@ -288,5 +366,5 @@ if username:
             }
             save_data()
             st.success("Profile saved! Redirecting to login...")
-            st.markdown('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
-            st.stop()
+            st.rerun()
+
