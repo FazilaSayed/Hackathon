@@ -132,7 +132,7 @@ def main_page(username):
                 st.stop()
         else:
             meta = sleep_data[username].get("meta", {})
-            st.success(f""Hey {username.capitalize()}, are you well-rested and ready to conquer the day? 🌟💪")
+            st.success(f""Hey {username.capitalize()}, are you well-rested and ready to conquer the day?")
 
             st.subheader("🛌 Log your sleep")
             date = st.date_input("Select the date", datetime.today())
