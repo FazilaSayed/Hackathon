@@ -56,7 +56,6 @@ def get_motivational_quote():
         ]
         return random.choice(fallback_quotes)
 
-# Main app page
 def main_page(username):
     st.title("🛌 Sleep Tracker")
     st.image("https://i.pinimg.com/originals/56/62/36/566236fb87c21b6f23512a429dd6476b.jpg", width=800)
@@ -93,34 +92,52 @@ def main_page(username):
             st.sidebar.success(f"Entry for {delete_str} deleted successfully!")
 
     # Date Range Selection
-    st.sidebar.subheader("📅 Select Date Range")
+    st.sidebar.subheader("📊 📅 **Select Dates to View Your Sleep Summary**")
     start_date = st.sidebar.date_input("Start Date", min_value=datetime(2020, 1, 1), value=datetime.today() - timedelta(days=7))
     end_date = st.sidebar.date_input("End Date", min_value=start_date, value=datetime.today())
 
     # Add button for generating summary in the sidebar
-    if st.sidebar.button("📊 Generate Summary"):
+    if st.sidebar.button("**Generate Summary**"):
         st.session_state.generate_summary = True
         st.session_state.start_date = start_date
         st.session_state.end_date = end_date
 
     # Main Page content
 
-    def get_required_sleep(age, gender):
-        if age <= 5:
-            return 11
+    def get_required_sleep_range(age, gender):
+        gender = gender.lower()
+
+        if age <= 1:
+            min_sleep, max_sleep = 14, 17
+        elif age <= 2:
+            min_sleep, max_sleep = 12, 15
+        elif age <= 5:
+            min_sleep, max_sleep = 10, 13
         elif age <= 13:
-            return 10
+            min_sleep, max_sleep = 9, 11
         elif age <= 18:
-            return 9
+            min_sleep, max_sleep = 8, 10
         elif age <= 64:
-            return 7
+            min_sleep, max_sleep = 7, 9
         else:
-            return 7
+            min_sleep, max_sleep = 7, 8
+
+        if gender == "Female":
+            min_sleep += 0.5
+            max_sleep += 0.5
+
+        return round(min_sleep, 1), round(max_sleep, 1)
+
+
+    def get_required_sleep(age, gender):
+        # Calculate the average of min_sleep and max_sleep
+        min_sleep, max_sleep = get_required_sleep_range(age, gender)
+        return (min_sleep + max_sleep) / 2
 
     if username:
         if username not in sleep_data:
             st.subheader("New user detected! Please complete your profile:")
-            gender = st.selectbox("Select your gender:", ["Male", "Female", "Other"])
+            gender = st.selectbox("Select your gender:", ["Male", "Female"])
             age = st.number_input("Enter your age:", min_value=1, max_value=100, step=1)
             if st.button("Save Profile"):
                 sleep_data[username] = {
@@ -132,7 +149,9 @@ def main_page(username):
                 st.stop()
         else:
             meta = sleep_data[username].get("meta", {})
-            st.success(f"Hey {username.capitalize()}, are you well-rested and ready to conquer the day?")
+            gender = meta["gender"]  # Fetch the gender from meta
+            age = meta["age"]  # Fetch the age from meta
+            st.success(f"Hey {first_name.capitalize()}, are you well-rested and ready to conquer the day?")
 
             st.subheader("🛌 Log your sleep")
             date = st.date_input("Select the date", datetime.today())
@@ -164,16 +183,20 @@ def main_page(username):
                     save_data()
                     st.success(f"Logged {duration} hours of sleep on {today_str}!")
 
-                    required = get_required_sleep(meta["age"], meta["gender"])
+                    required_min_sleep, required_max_sleep = get_required_sleep_range(age, gender)
                     feedback = []
                     if duration == 0:
-                        feedback.append("No sleep? Rest is crucial to recharge your body and mind!")
-                    elif duration < required:
+                        feedback.append("No sleep?")
+                    elif duration < required_min_sleep:
                         feedback.append("🛌 You slept less than recommended. Try to get more rest!")
-                    else:
+                    elif required_min_sleep <= duration <= required_max_sleep:
                         feedback.append("✅ Great! You met your sleep goal!")
-
-                    if 21 <= sleep_time.hour < 24:
+                    else:
+                        feedback.append("😴 You overslept today!")
+                    
+                    if duration == 0:
+                        feedback.append(" Rest is crucial to recharge your body and mind!")
+                    elif 21 <= sleep_time.hour < 24:
                         feedback.append("✅ Perfect! You went to bed on time or earlier. Great sleep discipline!")
                     elif sleep_time.hour <= 5:
                         feedback.append("⚠️ You were past your bedtime. Try to sleep earlier for better rest.")
@@ -213,7 +236,11 @@ def main_page(username):
                     avg_sleep = round(sum(durations) / len(durations), 2)
 
                     # Recommended sleep ranges by age
-                    if meta["age"] <= 5:
+                    if meta["age"] <= 1:
+                        min_sleep, max_sleep = 14, 17
+                    elif meta["age"] <= 2:
+                        min_sleep, max_sleep = 12, 15
+                    elif meta["age"] <= 5:
                         min_sleep, max_sleep = 10, 13
                     elif meta["age"] <= 13:
                         min_sleep, max_sleep = 9, 11
@@ -224,6 +251,12 @@ def main_page(username):
                     else:
                         min_sleep, max_sleep = 7, 8
 
+                    if gender == "Female":
+                        min_sleep += 0.5
+                        max_sleep += 0.5
+                        min_sleep = round(min_sleep, 1)
+                        max_sleep = round(max_sleep, 1)
+                    
                     # Determine bar colors based on duration
                     bar_colors = []
                     for d in durations:
@@ -235,7 +268,7 @@ def main_page(username):
                             bar_colors.append('darkgreen')
 
                     # Plot bar or line graph based on the number of entries
-                    if len(durations) <= 7:
+                    if len(durations) <= 5:
                         fig, ax = plt.subplots()
                         ax.bar(dates, durations, color=bar_colors)
                         ax.axhspan(min_sleep, max_sleep, facecolor='lightgreen', alpha=0.3, label=f"Ideal: {min_sleep}-{max_sleep} hrs")
@@ -333,19 +366,19 @@ def main_page(username):
                         A few minutes of gentle stretching or yoga before bed can help your body release tension and ease into sleep. 
                         """
                     else:
-                        sleep_feedback = "Sleep is the golden chain that ties our bodies and good health together!"  # Add a default value for sleep_feedback
+                        sleep_feedback = "⏰ You’ve overslept for an extended duration! To stay fresh and active, try adjusting your bedtime, stay hydrated, take a quick walk, and get some sunlight to recharge your energy!"  # Add a default value for sleep_feedback
 
                     # Construct the summary
                     streak_display = f"Your longest streak of meeting the sleep goal is **{longest_streak} day(s)**, between {streak_start_date} and {streak_end_date}." if longest_streak > 0 else "No sleep goals met yet. Let's work on that!"
 
                     summary = f"""
-                    🌟 Hey {username.capitalize()}! Here's your sleep snapshot for this week:
+                    🌟 Hey {first_name.capitalize()}! Here's your sleep snapshot for this week:
 
-                    - Recommended total sleep for this period of {count_days} days is **{recommended_start_range}-{recommended_end_range} hrs**, you slept a total of **{total_sleep_week} hrs** in this duration of {count_days} day(s).
-                    - Your average sleep during the period of {count_days} days is **{avg_sleep} hrs** and the recommended sleep for a {meta['age']} year old ({meta['gender']}) is **{min_sleep}-{max_sleep} hrs**.
+                    - Recommended total sleep for this period of {count_days} days is **{recommended_start_range}-{recommended_end_range} hrs**, you slept a total of **{round(total_sleep_week)} hrs** in this duration of {count_days} day(s).
+                    - Your average sleep hours/day over the period of {count_days} days is **{avg_sleep} hrs** and the recommended sleep for a {meta['age']} year old ({meta['gender']}) is **{min_sleep}-{max_sleep} hrs**.
                     - {streak_display}
-                    
-                    {sleep_feedback}
+                    - Sleep is the golden chain that ties our bodies and good health together!
+                    - {sleep_feedback}
                     """
 
                   # Display the sleep feedback and summary
@@ -358,15 +391,18 @@ def main_page(username):
     if st.sidebar.button("🚪 Logout"):
         st.session_state.clear()
         st.rerun()
-
-
+        
+import re
 
 # ------------------------
 # Main Page Logic
 # ------------------------
 
 if "username" not in st.session_state:
-    # App description
+    # User chooses login or signup
+    mode = st.radio("Select an option to continue:", ["Login", "Sign Up"], horizontal=True)
+
+    # Common intro and image
     st.markdown("""
     ## 🌙 Welcome to **Sleep Tracker**   
     Track your sleep, build streaks, and get personalized feedback to become a **Sleep Superstar**!  
@@ -374,37 +410,99 @@ if "username" not in st.session_state:
     """)
     st.image("https://i.pinimg.com/originals/56/62/36/566236fb87c21b6f23512a429dd6476b.jpg", width=800)
 
-    st.markdown("#### 👋 Let's get started!")
-    st.markdown("Type your name to log in or create a profile. This helps us personalize your sleep journey. 😴")
-    raw_username = st.text_input("Enter your name to continue:", key="username_input").strip()
-    normalized_username = raw_username.lower()
+    if mode == "Login":
+        st.markdown("#### 🔐 Enter your Username to log in:")
+        raw_username = st.text_input("Username:", key="login_username_input").strip().lower()
 
-    if raw_username:
-        st.session_state["username"] = normalized_username
-        st.session_state["display_name"] = raw_username  # keep original casing for display
-        st.rerun()
+        if raw_username:
+            if raw_username not in sleep_data:
+                st.error("❗ Username not found. Please check your ID or sign up.")
+            else:
+                st.session_state["username"] = raw_username
+                st.session_state["display_name"] = sleep_data[raw_username]["meta"].get("name", raw_username.title())
+                st.success("Logged in successfully!")
+                st.rerun()
 
-# Once username is in session state, continue as normal
+    elif mode == "Sign Up":
+        st.markdown("#### 👋 Create your profile")
+        st.markdown("""
+        - **Name** can include letters and spaces (e.g., *John Doe*).  
+        - **Username** must be unique and contain only letters, numbers, or underscores (`_`).  
+        - **Age** and **Gender** help us personalize your sleep advice.
+        """)
+
+        # Input fields
+        raw_name = st.text_input("Enter your name:", key="name_input").strip()
+        gender = st.selectbox("Select your gender:", ["Male", "Female"])
+        age = st.number_input("Enter your age:", min_value=12, max_value=100, step=1)  # Age validation
+
+        raw_username = st.text_input("Choose a unique Username:", key="username_input").strip()
+        normalized_username = raw_username.lower()
+
+        # Validation checks for name and username
+        if raw_name and raw_username:
+            if not re.match("^[A-Za-z ]+$", raw_name):  # Name can only contain letters and spaces
+                st.error("❗ Name should only contain letters and spaces.")
+            elif not re.match("^[A-Za-z0-9_]+$", normalized_username):  # Username validation (letters, numbers, and underscores)
+                st.error("❗ Username should only contain letters, numerics, and underscores (_).")
+            elif normalized_username in sleep_data:  # Check if the Username is unique
+                st.error("❗ This Username is already taken!")
+            elif not gender or not age:
+                st.warning("Please fill in all profile details.")
+            else:
+                # If validation is successful, create the user profile in the desired format
+                st.session_state["username"] = normalized_username
+                st.session_state["display_name"] = raw_name  # Preserve original casing and spacing
+
+                # Store the user data in the specified format
+                sleep_data[normalized_username] = {
+                    "meta": {
+                        "gender": gender,
+                        "age": age,    
+                        "name": raw_name,
+                        "username": normalized_username
+                    },
+                    "entries": []
+                }
+                save_data()  # Save the data to the JSON or database
+                st.success("✅ Profile created! You are now logged in!")
+
+                # Keep the signup form visible on the home page instead of redirecting
+                st.rerun()
+
+# ------------------------
+# Logged-in User View
+# ------------------------
+
 if "username" in st.session_state:
     username = st.session_state["username"]
     display_name = st.session_state.get("display_name", username.title())
-    
+    # Extract first name and capitalize it
+    first_name = display_name.split()[0].capitalize()
     
     if username in sleep_data:
+        # Display the name instead of username on the main page
         main_page(username)
     else:
-        st.subheader("🆕 New user detected! Let’s create your profile 👇")
+        # New user profile creation (in case the session state is reset)
+        st.subheader("🆕 New user detected! Let’s complete your profile 👇")
         st.markdown("We use this info to give you **accurate sleep recommendations** based on your age & gender.")        
         with st.form("new_user_form", clear_on_submit=False):
             gender = st.selectbox("Select your gender:", ["Male", "Female"])
-            age = st.number_input("Enter your age:", min_value=1, max_value=100, step=1)
+            age = st.number_input("Enter your age:", min_value=12, max_value=100, step=1)
             submit = st.form_submit_button("Save Profile")
-        
+
         if submit:
-            sleep_data[username] = {
-                "meta": {"gender": gender, "age": age},
-                "entries": []
-            }
-            save_data()
-            st.success("Profile saved! Redirecting to login...")
-            st.rerun()
+            # Ensure that the form is only submitted when all details are filled in
+            if not gender or not age:
+                st.warning("Please fill in all profile details.")
+            else:
+                sleep_data[username] = {
+                    "username": username,
+                    "meta": {"gender": gender, "age": age, "name": display_name},
+                    "entries": []
+                }
+                save_data()
+                st.success("Profile saved! You are now logged in!")
+                # Keep the form visible after profile is saved (no redirection)
+                st.rerun()  # This keeps the form visible even after profile creation
