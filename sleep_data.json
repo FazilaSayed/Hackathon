@@ -13,7 +13,7 @@
             "type": "nap"
         }
     ],
-    "Gauri": {
+    "gauri": {
         "meta": {
             "age": 18,
             "gender": "Female"
@@ -27,7 +27,7 @@
             }
         ]
     },
-    "Chetan": {
+    "chetan": {
         "meta": {
             "gender": "Male",
             "age": 41
@@ -41,14 +41,14 @@
             }
         ]
     },
-    "Ankita": {
+    "ankita": {
         "meta": {
             "gender": "Female",
             "age": 19
         },
         "entries": []
     },
-    "Fazila": {
+    "fazila": {
         "meta": {
             "gender": "Female",
             "age": 17
@@ -115,20 +115,32 @@
                 "duration": 8.75
             },
             {
-                "date": "2025-04-12",
-                "sleep_time": "18:00",
-                "wake_time": "18:00",
-                "duration": 0.0
+                "date": "2025-04-21",
+                "sleep_time": "20:00",
+                "wake_time": "06:00",
+                "duration": 10.0
             },
             {
-                "date": "2025-04-21",
-                "sleep_time": "18:34",
-                "wake_time": "18:34",
-                "duration": 0.0
+                "date": "2025-04-12",
+                "sleep_time": "00:00",
+                "wake_time": "08:00",
+                "duration": 8.0
+            },
+            {
+                "date": "2025-04-20",
+                "sleep_time": "00:00",
+                "wake_time": "08:00",
+                "duration": 8.0
+            },
+            {
+                "date": "2025-04-11",
+                "sleep_time": "14:06",
+                "wake_time": "23:45",
+                "duration": 9.65
             }
         ]
     },
-    "Riya": {
+    "riya": {
         "meta": {
             "gender": "Male",
             "age": 10
@@ -160,21 +172,21 @@
             }
         ]
     },
-    "Zoya": {
+    "zoya": {
         "meta": {
             "gender": "Male",
             "age": 18
         },
         "entries": []
     },
-    "Fazil": {
+    "fazil": {
         "meta": {
             "gender": "Female",
             "age": 12
         },
         "entries": []
     },
-    "Rohan": {
+    "rohan": {
         "meta": {
             "gender": "Male",
             "age": 30
@@ -206,7 +218,7 @@
             }
         ]
     },
-    "Shweta": {
+    "shweta": {
         "meta": {
             "gender": "Female",
             "age": 32
@@ -220,7 +232,7 @@
             }
         ]
     },
-    "Zuha": {
+    "zuha": {
         "meta": {
             "gender": "Female",
             "age": 14
@@ -240,7 +252,7 @@
             }
         ]
     },
-    "Ahana": {
+    "ahana": {
         "meta": {
             "gender": "Female",
             "age": 25
@@ -254,35 +266,35 @@
             }
         ]
     },
-    "Zoheb": {
+    "zoheb": {
         "meta": {
             "gender": "Male",
             "age": 65
         },
         "entries": []
     },
-    "Hose": {
+    "hose": {
         "meta": {
             "gender": "Male",
             "age": 27
         },
         "entries": []
     },
-    "Rohit": {
+    "rohit": {
         "meta": {
             "gender": "Male",
             "age": 68
         },
         "entries": []
     },
-    "Fazia": {
+    "fazia": {
         "meta": {
             "gender": "Male",
             "age": 1
         },
         "entries": []
     },
-    "Kavitha": {
+    "kavitha": {
         "meta": {
             "gender": "Female",
             "age": 28
@@ -326,7 +338,7 @@
             }
         ]
     },
-    "Anam": {
+    "anam": {
         "meta": {
             "gender": "Female",
             "age": 18
@@ -346,73 +358,115 @@
             }
         ]
     },
-    "Kavi": {
+    "kavi": {
         "meta": {
             "gender": "Male",
             "age": 9
         },
         "entries": []
     },
-    "Pushpa": {
+    "pushpa": {
         "meta": {
             "gender": "Female",
             "age": 15
         },
         "entries": []
     },
-    "Kriti": {
+    "kriti": {
         "meta": {
             "gender": "Female",
             "age": 2
         },
         "entries": []
     },
-    "Joe": {
+    "joe": {
         "meta": {
             "gender": "Male",
             "age": 17
         },
         "entries": []
     },
-    "Pony": {
+    "pony": {
         "meta": {
             "gender": "Male",
             "age": 23
         },
         "entries": []
     },
-    "Koko": {
+    "koko": {
         "meta": {
             "gender": "Male",
             "age": 1
         },
         "entries": []
     },
-    "Poly": {
+    "poly": {
         "meta": {
             "gender": "Male",
             "age": 1
         },
         "entries": []
     },
-    "Tinkerbell": {
+    "tinkerbell": {
         "meta": {
             "gender": "Female",
             "age": 15
         },
         "entries": []
     },
-    "Kelly": {
+    "kelly": {
         "meta": {
             "gender": "Male",
             "age": 1
         },
         "entries": []
     },
-    "Aman": {
+    "aman": {
         "meta": {
             "gender": "Male",
             "age": 21
+        },
+        "entries": []
+    },
+    "rajeev": {
+        "meta": {
+            "gender": "Male",
+            "age": 32
+        },
+        "entries": []
+    },
+    "baby": {
+        "meta": {
+            "gender": "Male",
+            "age": 34
+        },
+        "entries": []
+    },
+    "pinku": {
+        "meta": {
+            "gender": "Male",
+            "age": 1
+        },
+        "entries": []
+    },
+    "gs": {
+        "meta": {
+            "gender": "Male",
+            "age": 1
+        },
+        "entries": []
+    },
+    "soo": {
+        "meta": {
+            "gender": "Male",
+            "age": 1
+        },
+        "entries": []
+    },
+    "jooohi": {
+        "meta": {
+            "gender": "Female",
+            "age": 19
         },
         "entries": []
     }
