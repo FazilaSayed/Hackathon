@@ -341,9 +341,9 @@ def main_page(username):
                     summary = f"""
                     🌟 Hey {username.capitalize()}! Here's your sleep snapshot for this week:
 
+                    - Recommended total sleep for this period of {count_days} days is **{recommended_start_range}-{recommended_end_range} hrs**, you slept a total of **{total_sleep_week} hrs** in this duration of {count_days} day(s).
                     - Your average sleep during the period of {count_days} days is **{avg_sleep} hrs** and the recommended sleep for a {meta['age']} year old ({meta['gender']}) is **{min_sleep}-{max_sleep} hrs**.
                     - {streak_display}
-                    - Recommended total sleep for this period of {count_days} days is **{recommended_start_range}-{recommended_end_range} hrs**, you slept a total of **{total_sleep_week} hrs** in this duration of {count_days} day(s).
                     
                     {sleep_feedback}
                     """
