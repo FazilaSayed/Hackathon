@@ -374,7 +374,7 @@ def main_page(username):
                     summary = f"""
                     🌟 Hey {first_name.capitalize()}! Here's your sleep snapshot for this week:
 
-                    - Recommended total sleep for this period of {count_days} days is **{recommended_start_range}-{recommended_end_range} hrs**, you slept a total of **{round(total_sleep_week)} hrs** in this duration of {count_days} day(s).
+                    - Recommended total sleep for this period of {count_days} day(s) is **{recommended_start_range}-{recommended_end_range} hrs**, you slept a total of **{round(total_sleep_week)} hrs** in this duration of {count_days} day(s).
                     - Your average sleep hours/day over the period of {count_days} day(s) is **{avg_sleep} hrs** and the recommended sleep for a {meta['age']} year old ({meta['gender']}) is **{min_sleep}-{max_sleep} hrs**.
                     - {streak_display}
                     - Sleep is the golden chain that ties our bodies and good health together!
