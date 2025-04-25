@@ -128,11 +128,11 @@ def main_page(username):
                     "entries": []
                 }
                 save_data()
-                st.success("Profile saved! Reload the app to begin logging.")
+                st.success("Profile saved! Enter your name to log in.")
                 st.stop()
         else:
             meta = sleep_data[username].get("meta", {})
-            st.success(f"Welcome back, {username}! 🌙")
+            st.success(f"Welcome back, {username.capitalize()}! 🌙")
 
             st.subheader("🛌 Log your sleep")
             date = st.date_input("Select the date", datetime.today())
@@ -166,17 +166,19 @@ def main_page(username):
 
                     required = get_required_sleep(meta["age"], meta["gender"])
                     feedback = []
-                    if duration < required:
+                    if duration == 0:
+                        feedback.append("No sleep? Rest is crucial to recharge your body and mind!")
+                    elif duration < required:
                         feedback.append("🛌 You slept less than recommended. Try to get more rest!")
                     else:
                         feedback.append("✅ Great! You met your sleep goal!")
 
                     if 21 <= sleep_time.hour < 24:
                         feedback.append("✅ Perfect! You went to bed on time or earlier. Great sleep discipline!")
-                    elif sleep_time.hour < 12:
+                    elif sleep_time.hour <= 5:
                         feedback.append("⚠️ You were past your bedtime. Try to sleep earlier for better rest.")
                     else:
-                        feedback.append("⚠️ Sleep time seems unusual. Try to keep it between 9 PM and 12 AM.")
+                        feedback.append("⚠️ Bedtime seems unusual. Try to sleep between 9 PM and 12 AM.")
 
                     st.markdown("<br>".join(feedback), unsafe_allow_html=True)
 
@@ -243,7 +245,7 @@ def main_page(username):
                             Patch(facecolor='grey', label='Below Ideal'),
                             Patch(facecolor='teal', label='Within Ideal'),
                             Patch(facecolor='darkgreen', label='Above Ideal'),
-                            Patch(facecolor='lightgreen', alpha=0.3, label=f'Ideal Range {min_sleep}-{max_sleep} hrs')
+                            Patch(facecolor='green', alpha=0.3, label=f'Ideal Range {min_sleep}-{max_sleep} hrs')
                         ]
                         ax.legend(handles=legend_patches, bbox_to_anchor=(1.02, 1), loc='upper left')
 
@@ -261,11 +263,10 @@ def main_page(username):
                         y = durations
 
                         ax.plot(x, y, color='mediumslateblue', marker='o', linewidth=2, label="Sleep Duration")
-                        ax.fill_between(x, y, min_sleep, where=[val >= min_sleep for val in y], color='lavender', alpha=0.3)
                         ax.axhline(y=min_sleep, color='orangered', linestyle='--', linewidth=1.5, label=f"Min Recommended ({min_sleep} hrs)")
                         ax.axhline(y=max_sleep, color='seagreen', linestyle='--', linewidth=1.5, label=f"Max Recommended ({max_sleep} hrs)")
-                        ax.fill_between(x, min_sleep, max_sleep, color='palegreen', alpha=0.2, label='Ideal Range')
-
+                        ax.fill_between(x, min_sleep, max_sleep, color='green', alpha=0.2, label='Ideal Range')
+                        
                         for i, txt in enumerate(y):
                             ax.annotate(f"{txt:.1f}", (x[i], y[i]), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=8, color='black')
 
@@ -279,14 +280,14 @@ def main_page(username):
                         ax.legend(loc="upper left", frameon=True)
                         st.pyplot(fig)
 
-  # Additional sleep summary
+                     # Additional sleep summary
                     # Calculate the number of days in the selected range
                     days_in_range = (end_date - start_date).days + 1  # Including both start and end dates
                     #Calculate the required sleep for the total days in the range
                     required_sleep_week = get_required_sleep(meta["age"], meta["gender"]) * days_in_range
 
                     total_sleep_week = sum(durations)
-
+                   
                     # Calculate longest streak
                     streak = 0
                     longest_streak = 0
@@ -302,28 +303,62 @@ def main_page(username):
                                 streak_end_date = dates[idx]
                         else:
                             streak = 0
+                            
+                    count_days = len(durations)
+                    recommended_start_range = count_days*min_sleep
+                    recommended_end_range = count_days*max_sleep
+                   
+                # Generate sleep feedback based on the total sleep for the week
+                    if recommended_start_range <= total_sleep_week <= recommended_end_range:
+                        sleep_feedback = "✅ Great! You're on track!"
+                    elif total_sleep_week < recommended_start_range:
+                        sleep_feedback = """
+                        🛌 Let's aim to improve your weekly sleep total!
+                        
+                        ✨ Tips:
+                        
+                        1. **Unplug Before Bed** 📴  
+                        Power down screens at least 30 minutes before sleeping. Your brain needs a break from that blue light!
+                        
+                        2. **Cool & Cozy** ❄️  
+                        Keep your room cool (around 18°C or 65°F) for the perfect sleep environment—it's like nature’s sleep hack.
+                        
+                        3. **Sleep Schedule = Power** ⏰  
+                        Go to bed and wake up at the same time every day—even on weekends! Consistency is key to feeling refreshed.
+                        
+                        4. **Dreamy Snacks** 🍓  
+                        Try a light bedtime snack like bananas or almonds. They're rich in magnesium, helping your muscles relax and unwind.
+                        
+                        5. **Stretch it Out** 🧘‍♂️  
+                        A few minutes of gentle stretching or yoga before bed can help your body release tension and ease into sleep. 
+                        """
+                    else:
+                        sleep_feedback = "Sleep is the golden chain that ties our bodies and good health together!"  # Add a default value for sleep_feedback
 
-                    # Custom Sleep Summary
+                    # Construct the summary
+                    streak_display = f"Your longest streak of meeting the sleep goal is **{longest_streak} day(s)**, between {streak_start_date} and {streak_end_date}." if longest_streak > 0 else "No sleep goals met yet. Let's work on that!"
+
                     summary = f"""
-                    🌟 Hey {username}! Here's your sleep snapshot for this week:
+                    🌟 Hey {username.capitalize()}! Here's your sleep snapshot for this week:
 
-                    - Your average sleep during this period is **{avg_sleep} hrs**.
-                    - Recommended sleep for a {meta['age']} year old ({meta['gender']}) is **{min_sleep}-{max_sleep} hrs**.
-                    - Your longest streak of meeting the sleep goal is **{longest_streak} days**, between {streak_start_date} and {streak_end_date}.
-                    - Recommended total sleep for this period: **{required_sleep_week} hrs**.
-
-                    - You slept **{total_sleep_week} hrs** this week.
-                    - { "✅ Great! You're on track!" if total_sleep_week >= required_sleep_week else "🛌 Let's aim to improve your weekly sleep total!" }
-
-                    ✨ Tips:
-                    - Try to keep a consistent bedtime each night.
-                    - Aim for 7-9 hours each night for best recovery.
-
-                    Keep tracking and you’ll be a sleep ninja soon!
+                    - Your average sleep during the period of {count_days} days is **{avg_sleep} hrs** and the recommended sleep for a {meta['age']} year old ({meta['gender']}) is **{min_sleep}-{max_sleep} hrs**.
+                    - {streak_display}
+                    - Recommended total sleep for this period of {count_days} days is **{recommended_start_range}-{recommended_end_range} hrs**, you slept a total of **{total_sleep_week} hrs** in this duration of {count_days} day(s).
+                    
+                    {sleep_feedback}
                     """
-                    st.markdown(summary)
 
-                st.session_state.generate_summary = False
+                  # Display the sleep feedback and summary
+                   # st.write(sleep_feedback)  # This will show the feedback (including the new message for exceeding)
+                    st.markdown(summary)      # This will display the detailed summary without repeating the quote
+
+                    st.session_state.generate_summary = False
+
+                   # Logout button
+    if st.sidebar.button("🚪 Logout"):
+        st.session_state.clear()
+        st.rerun()
+
 
 
 # ------------------------
@@ -337,17 +372,23 @@ if "username" not in st.session_state:
     Track your sleep, build streaks, and get personalized feedback to become a **Sleep Superstar**!  
     Just log your bedtime & wake time – we’ll take care of the rest 💤✨
     """)
+    st.image("https://i.pinimg.com/originals/56/62/36/566236fb87c21b6f23512a429dd6476b.jpg", width=800)
+
     st.markdown("#### 👋 Let's get started!")
     st.markdown("Type your name to log in or create a profile. This helps us personalize your sleep journey. 😴")
-    username = st.text_input("Enter your name to continue:", key="username_input").strip()
+    raw_username = st.text_input("Enter your name to continue:", key="username_input").strip()
+    normalized_username = raw_username.lower()
 
-    if username:
-        st.session_state["username"] = username
+    if raw_username:
+        st.session_state["username"] = normalized_username
+        st.session_state["display_name"] = raw_username  # keep original casing for display
         st.rerun()
 
 # Once username is in session state, continue as normal
 if "username" in st.session_state:
     username = st.session_state["username"]
+    display_name = st.session_state.get("display_name", username.title())
+    
     
     if username in sleep_data:
         main_page(username)
@@ -367,4 +408,3 @@ if "username" in st.session_state:
             save_data()
             st.success("Profile saved! Redirecting to login...")
             st.rerun()
-
